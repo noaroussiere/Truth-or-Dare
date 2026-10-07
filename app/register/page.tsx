@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,9 +17,26 @@ export default function Register() {
   const [oidcLoading, setOidcLoading] = useState(false)
   const router = useRouter()
 
-  const oidcEnabled = process.env.NEXT_PUBLIC_OIDC_ENABLED === "true"
-  const oidcProviderName = process.env.NEXT_PUBLIC_OIDC_PROVIDER_NAME || "OIDC / SSO"
-  const oidcProviderId = process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID || "oidc"
+  const [ssoConfig, setSsoConfig] = useState({
+    enabled: process.env.NEXT_PUBLIC_OIDC_ENABLED === "true",
+    providerName: process.env.NEXT_PUBLIC_OIDC_PROVIDER_NAME || "OIDC / SSO",
+    providerId: process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID || "oidc",
+  })
+
+  useEffect(() => {
+    fetch("/api/auth/sso-config")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.enabled === "boolean") {
+          setSsoConfig(data)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const oidcEnabled = ssoConfig.enabled
+  const oidcProviderName = ssoConfig.providerName
+  const oidcProviderId = ssoConfig.providerId
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()

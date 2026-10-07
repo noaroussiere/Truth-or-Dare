@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 function cleanEnv(val?: string): string {
   if (!val) return ""
   return val.replace(/^["']|["']$/g, "").trim()
@@ -21,9 +24,16 @@ export async function GET() {
     cleanEnv(process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID) ||
     "oidc"
 
-  return NextResponse.json({
-    enabled,
-    providerName,
-    providerId,
-  })
+  return NextResponse.json(
+    {
+      enabled,
+      providerName,
+      providerId,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate",
+      },
+    }
+  )
 }

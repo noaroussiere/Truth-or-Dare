@@ -3,6 +3,8 @@ services:
     image: postgres:16-alpine
     container_name: truthordare_db
     restart: always
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -23,12 +25,25 @@ services:
       dockerfile: Dockerfile
     container_name: truthordare_app
     restart: always
+    env_file:
+      - .env
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-truthordare}?schema=public"
-      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:-super-secret-key-change-in-production}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:-super-secret-key-change-in-production-1234567890}"
       BETTER_AUTH_URL: "${BETTER_AUTH_URL:-http://localhost:3000}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3000,http://localhost:80,http://localhost,http://127.0.0.1:3000,http://127.0.0.1}"
+      OIDC_ENABLED: "${OIDC_ENABLED:-false}"
+      NEXT_PUBLIC_OIDC_ENABLED: "${NEXT_PUBLIC_OIDC_ENABLED:-false}"
+      OIDC_PROVIDER_ID: "${OIDC_PROVIDER_ID:-oidc}"
+      NEXT_PUBLIC_OIDC_PROVIDER_ID: "${NEXT_PUBLIC_OIDC_PROVIDER_ID:-oidc}"
+      OIDC_PROVIDER_NAME: "${OIDC_PROVIDER_NAME:-SSO / Keycloak}"
+      NEXT_PUBLIC_OIDC_PROVIDER_NAME: "${NEXT_PUBLIC_OIDC_PROVIDER_NAME:-SSO / Keycloak}"
+      OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-}"
+      OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET:-}"
+      OIDC_DISCOVERY_URL: "${OIDC_DISCOVERY_URL:-}"
+      OIDC_SCOPES: "${OIDC_SCOPES:-openid,profile,email}"
       NODE_ENV: "production"
     depends_on:
       db:

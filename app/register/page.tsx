@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
-import { signUp } from "@/lib/auth-client"
-import { Flame, UserPlus, ArrowLeft } from "lucide-react"
+import { signUp, signIn } from "@/lib/auth-client"
+import { Flame, UserPlus, ArrowLeft, KeyRound } from "lucide-react"
 
 export default function Register() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [username, setUsername] = useState("")
   const [loading, setLoading] = useState(false)
+  const [oidcLoading, setOidcLoading] = useState(false)
   const router = useRouter()
+
+  const oidcEnabled = process.env.NEXT_PUBLIC_OIDC_ENABLED === "true"
+  const oidcProviderName = process.env.NEXT_PUBLIC_OIDC_PROVIDER_NAME || "OIDC / SSO"
+  const oidcProviderId = process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID || "oidc"
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +54,23 @@ export default function Register() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleOidcLogin = async () => {
+    setOidcLoading(true)
+    try {
+      await signIn.social({
+        provider: oidcProviderId as any,
+        callbackURL: "/",
+      })
+    } catch (err) {
+      toast({
+        title: "Erreur OIDC",
+        description: "Impossible d'initier la connexion OIDC.",
+        variant: "destructive",
+      })
+      setOidcLoading(false)
     }
   }
 
@@ -101,13 +123,27 @@ export default function Register() {
             </div>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || oidcLoading}
               className="w-full h-11 text-base font-semibold bg-red-600 hover:bg-red-700 text-white shadow-md transition-all"
             >
               <UserPlus className="w-4 h-4 mr-2" />
               {loading ? "Création du compte..." : "S'inscrire"}
             </Button>
           </form>
+
+          {oidcEnabled && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <Button
+                type="button"
+                onClick={handleOidcLogin}
+                disabled={oidcLoading || loading}
+                className="w-full h-11 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all"
+              >
+                <KeyRound className="w-4 h-4 mr-2" />
+                {oidcLoading ? "Redirection..." : `S'inscrire via ${oidcProviderName}`}
+              </Button>
+            </div>
+          )}
 
           <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
             <Button

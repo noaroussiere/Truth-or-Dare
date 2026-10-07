@@ -1,63 +1,81 @@
-# Action ou verité by nduboi ⛵
-Projet Personel  
-## Download 💾
+# Action ou Vérité 🔥 (v0.5.1)
 
-To download the game you need to do this command
+Projet moderne de jeu **Action ou Vérité** migré sur **Next.js App Router**, **Prisma ORM**, **PostgreSQL** et **Better Auth**.
 
-```bash
-git@github.com:nduboi/Action-ou-verite.git
-cd Action-ou-verite
-```
+---
 
-## How to play ? :desktop_computer:
+## 🚀 Nouveautés v0.5.1
 
-### You need to create 4 files :
+- ⚡ **Architecture Unifiée Next.js** : Fusion du serveur Express et de l'interface en un unique projet Next.js App Router (Route Handlers & Server Components).
+- 🗄️ **Base de données PostgreSQL + Prisma ORM** : Remplacement de MySQL brut par PostgreSQL géré par Prisma ORM avec migrations et seeding automatique.
+- 🔐 **Authentification Modernisée (Better Auth)** : Gestion de la connexion, inscription et sessions d'utilisateurs via `better-auth` avec adaptateur Prisma.
+- 🎨 **Interface Graphique (UI) Sublimée** : Design réactif avec Tailwind CSS, Lucide Icons et composants glassmorphism.
+- 🐳 **Déploiement Simplifié Docker Compose** : Lancement d'un conteneur PostgreSQL et de l'application Next.js standalone avec un simple `docker compose up -d`.
+- 📦 **CI/CD GitHub Actions** : Workflow automatique qui valide le build (`npm run build`), génère l'image Docker multi-stage et la pousse sur **GitHub Container Registry (`ghcr.io`)**.
 
-First a file named : mail.env you need to fill with your informations
-```env
-MAIL_HOST=STMP_SERVER
-MAIL_ADRESS=Email_adress
-MAIL_PASSWORD=App_password
-MAIL_PORT=STMP_PORT
-```
+---
 
-Second file named : pma.env you need to fill with your informations
-```env
-PMA_HOST=(database_service) by default db
-PMA_PORT=(database_port) by default 3306
-```
+## 🛠️ Configuration & Déploiement
 
-Next file named : api_token.env you need to fill with secured informations
-This token will be use to secured the communication btw the api and the server
-```env
-API_TOKEN=(secure_token)
-SECRET_KEY_JWT=(secure_token)
-```
+### 1. Variables d'environnement
 
-Finally file named db_log.env you need to fill with your informations
-```env
-MYSQL_ROOT_PASSWORD=(database_root_password) choose a password
-MYSQL_DATABASE=(database_name) choose a name
-MYSQL_USER=(database_user) choose a username
-MYSQL_PASSWORD=(database_password) choose a password
-MYSQL_HOST=(database_service) by default db
-```
-
-### When you have created all files :  
+Copiez le fichier d'exemple `.env.example` en `.env` :
 
 ```bash
-docker-compose up -d
+cp .env.example .env
 ```
 
-Go to this website http://localhost:80
+Modifiez au besoin les clés dans le fichier `.env` :
 
-## Requirements
+```env
+DATABASE_URL="postgresql://postgres:postgres@db:5432/truthordare?schema=public"
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=truthordare
+APP_PORT=3000
+BETTER_AUTH_SECRET="votre-secret-de-securite-au-moins-32-caracteres"
+BETTER_AUTH_URL="http://localhost:3000"
+```
 
-Docker  
+---
 
-Docker compose
+### 2. Déploiement avec Docker Compose
 
-## Contribution 👏
-**Created by :** 📝
+Lancement en local ou sur votre serveur :
 
-[@nduboi](https://github.com/nduboi)
+```bash
+docker compose up -d --build
+```
+
+L'application sera accessible sur `http://localhost:3000` (ou le port défini dans `APP_PORT`).
+
+---
+
+### 3. Développement local sans Docker
+
+Si vous préférez exécuter le projet localement :
+
+```bash
+# Inscription et installation des dépendances
+npm install
+
+# Génération du client Prisma & application du schéma sur PostgreSQL local
+npx prisma db push
+npx prisma db seed
+
+# Lancement en serveur de développement
+npm run dev
+```
+
+---
+
+## 📜 Changelog
+
+Consultez le fichier [`CHANGELOG.md`](./CHANGELOG.md) pour le détail des évolutions de la version 0.5.1.
+
+---
+
+## 👏 Contribution & Crédits
+
+**Auteur originel :** [@nduboi](https://github.com/nduboi)  
+**Version 0.5.1 :** Modernisation Next.js / PostgreSQL / Prisma / Better Auth / Docker / GHCR Action.

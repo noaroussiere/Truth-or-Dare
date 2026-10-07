@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server"
 
+function cleanEnv(val?: string): string {
+  if (!val) return ""
+  return val.replace(/^["']|["']$/g, "").trim()
+}
+
 export async function GET() {
-  const enabled =
-    process.env.OIDC_ENABLED === "true" ||
-    process.env.NEXT_PUBLIC_OIDC_ENABLED === "true" ||
-    Boolean(process.env.OIDC_CLIENT_ID)
+  const oidcEnabled = cleanEnv(process.env.OIDC_ENABLED) || cleanEnv(process.env.NEXT_PUBLIC_OIDC_ENABLED)
+  const oidcClientId = cleanEnv(process.env.OIDC_CLIENT_ID)
+
+  const enabled = oidcEnabled === "true" || Boolean(oidcClientId)
 
   const providerName =
-    process.env.OIDC_PROVIDER_NAME ||
-    process.env.NEXT_PUBLIC_OIDC_PROVIDER_NAME ||
+    cleanEnv(process.env.OIDC_PROVIDER_NAME) ||
+    cleanEnv(process.env.NEXT_PUBLIC_OIDC_PROVIDER_NAME) ||
     "OIDC / SSO"
 
   const providerId =
-    process.env.OIDC_PROVIDER_ID ||
-    process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID ||
+    cleanEnv(process.env.OIDC_PROVIDER_ID) ||
+    cleanEnv(process.env.NEXT_PUBLIC_OIDC_PROVIDER_ID) ||
     "oidc"
 
   return NextResponse.json({

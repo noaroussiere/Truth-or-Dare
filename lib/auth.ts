@@ -3,14 +3,21 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { genericOAuth } from "better-auth/plugins"
 import { prisma } from "@/lib/prisma"
 
-// Collect trusted origins to prevent "Invalid origin" errors
-const configuredTrustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS || "")
+function cleanEnv(val?: string): string {
+  if (!val) return ""
+  return val.replace(/^["']|["']$/g, "").trim()
+}
+
+const rawTrustedOrigins = cleanEnv(process.env.BETTER_AUTH_TRUSTED_ORIGINS)
+const configuredTrustedOrigins = rawTrustedOrigins
   .split(",")
-  .map((o) => o.trim())
+  .map((o) => cleanEnv(o))
   .filter(Boolean)
 
+const baseUrl = cleanEnv(process.env.BETTER_AUTH_URL) || "http://localhost:3000"
+
 const defaultTrustedOrigins = [
-  process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseUrl,
   "http://localhost:3000",
   "http://localhost:80",
   "http://localhost",
@@ -23,30 +30,35 @@ const trustedOrigins = Array.from(new Set([...defaultTrustedOrigins, ...configur
 // Configure optional OIDC / Generic OAuth plugin
 const plugins = []
 
-if (process.env.OIDC_ENABLED === "true" || process.env.OIDC_CLIENT_ID) {
-  const providerId = process.env.OIDC_PROVIDER_ID || "oidc"
-  const discoveryUrl = process.env.OIDC_DISCOVERY_URL
-  const authorizationUrl = process.env.OIDC_AUTHORIZATION_URL
-  const tokenUrl = process.env.OIDC_TOKEN_URL
-  const userInfoUrl = process.env.OIDC_USER_INFO_URL
-  const scopes = (process.env.OIDC_SCOPES || "openid,profile,email")
+const oidcEnabled = cleanEnv(process.env.OIDC_ENABLED) === "true"
+const oidcClientId = cleanEnv(process.env.OIDC_CLIENT_ID)
+
+if (oidcEnabled || oidcClientId) {
+  const providerId = cleanEnv(process.env.OIDC_PROVIDER_ID) || "oidc"
+  const discoveryUrl = cleanEnv(process.env.OIDC_DISCOVERY_URL)
+  const authorizationUrl = cleanEnv(process.env.OIDC_AUTHORIZATION_URL)
+  const tokenUrl = cleanEnv(process.env.OIDC_TOKEN_URL)
+  const userInfoUrl = cleanEnv(process.env.OIDC_USER_INFO_URL)
+  const issuer = cleanEnv(process.env.OIDC_ISSUER)
+  const scopes = (cleanEnv(process.env.OIDC_SCOPES) || "openid,profile,email")
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => cleanEnv(s))
+    .filter(Boolean)
 
   plugins.push(
     genericOAuth({
       config: [
         {
           providerId,
-          name: process.env.OIDC_PROVIDER_NAME || "OIDC / SSO",
-          clientId: process.env.OIDC_CLIENT_ID || "",
-          clientSecret: process.env.OIDC_CLIENT_SECRET || "",
+          name: cleanEnv(process.env.OIDC_PROVIDER_NAME) || "OIDC / SSO",
+          clientId: oidcClientId,
+          clientSecret: cleanEnv(process.env.OIDC_CLIENT_SECRET),
           ...(discoveryUrl ? { discoveryUrl } : {}),
           ...(authorizationUrl ? { authorizationUrl } : {}),
           ...(tokenUrl ? { tokenUrl } : {}),
           ...(userInfoUrl ? { userInfoUrl } : {}),
-          ...(process.env.OIDC_ISSUER ? { issuer: process.env.OIDC_ISSUER } : {}),
-          redirectURI: `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/api/auth/callback/${providerId}`,
+          ...(issuer ? { issuer } : {}),
+          redirectURI: `${baseUrl}/api/auth/callback/${providerId}`,
           scopes,
           pkce: true,
         },
@@ -56,8 +68,8 @@ if (process.env.OIDC_ENABLED === "true" || process.env.OIDC_CLIENT_ID) {
 }
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET || "super-secret-key-change-in-production-1234567890",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  secret: cleanEnv(process.env.BETTER_AUTH_SECRET) || "super-secret-key-change-in-production-1234567890",
+  baseURL: baseUrl,
   trustedOrigins,
   database: prismaAdapter(prisma, {
     provider: "postgresql",

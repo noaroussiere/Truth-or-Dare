@@ -1,4 +1,9 @@
+import dotenv from "dotenv"
+import { expand } from "dotenv-expand"
 import { PrismaClient } from "@prisma/client"
+
+const myEnv = dotenv.config()
+expand(myEnv)
 
 const prisma = new PrismaClient()
 

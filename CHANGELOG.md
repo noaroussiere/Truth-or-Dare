@@ -23,7 +23,7 @@ Toutes les modifications majeures apportées au projet **Action ou Vérité** so
 - **Support OIDC / Single Sign-On (SSO)** :
   - Intégration du plugin `genericOAuth` de Better Auth pour permettre l'authentification OpenID Connect (Keycloak, Authentik, Authelia, Auth0, etc.).
   - Boutons de connexion/inscription SSO OIDC configurables sur les pages `/login` et `/register`.
-- **Protection des endpoints** : Enregistrement sécurisé des utilisateurs et protection du formulaire d'ajout de défis.
+- **Support de `dotenv-expand`** : Installation et intégration de `dotenv-expand` permettant la composition dynamique des variables d'environnement (ex: `DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"`).
 
 ### 🎨 Amélioration de l'Interface Utilisateur (UI)
 - **Design Modernisé** : Cartes glassmorphism, dégradés dynamiques, badges d'état et icônes Lucide.
@@ -34,7 +34,7 @@ Toutes les modifications majeures apportées au projet **Action ou Vérité** so
   - **Ajout de défis** : Formulaire modernisé avec retour visuel par notifications Toast.
 
 ### 🐳 Déploiement & Configuration (.env & Docker Compose)
-- **Centralisation des variables d'environnement dans `.env`** : Regroupement complet de la base de données, du port app, des secrets d'authentification, origines de confiance et paramètres OIDC.
+- **Centralisation des variables d'environnement dans `.env`** : Regroupement complet de la base de données, du port app, des secrets d'authentification, origines de confiance et paramètres OIDC avec syntaxe dynamique `${VAR}`.
 - **Docker Compose** : Configuration orchestrant PostgreSQL (`truthordare_db`) et l'application Next.js standalone (`truthordare_app`) avec chargement direct du `.env`.
 
 ### 🤖 Automation & CI/CD (GitHub Actions)

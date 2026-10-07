@@ -1,3 +1,10 @@
+import dotenv from 'dotenv';
+import { expand } from 'dotenv-expand';
+
+// Load and expand variables from .env
+const myEnv = dotenv.config();
+expand(myEnv);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',

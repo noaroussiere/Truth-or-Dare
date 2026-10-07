@@ -33,6 +33,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies & Build Next.js natively
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/truthordare?schema=public"
+          BETTER_AUTH_SECRET: "build-secret-key-testing-1234567890"
+          BETTER_AUTH_URL: "http://localhost:3000"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 

@@ -63,8 +63,16 @@ if (oidcEnabled || oidcClientId) {
           pkce: true,
           overrideUserInfo: true,
           mapProfileToUser: async (profile: any) => {
-            const rawGroups: string[] = Array.isArray(profile?.groups) ? profile.groups : []
-            const configuredAdminGroups = (cleanEnv(process.env.OIDC_ADMIN_GROUPS) || "truthordare admin,authentik Admins,Grafana Admins")
+            const rawGroups: string[] = Array.isArray(profile?.groups)
+              ? profile.groups
+              : typeof profile?.groups === "string"
+              ? [profile.groups]
+              : []
+
+            const configuredAdminGroups = (
+              cleanEnv(process.env.OIDC_ADMIN_GROUPS) ||
+              "Truthordare admins,truthordare admin,authentik Admins,Grafana Admins"
+            )
               .split(",")
               .map((g) => cleanEnv(g))
               .filter(Boolean)
@@ -76,7 +84,9 @@ if (oidcEnabled || oidcClientId) {
 
             const userEmail = (profile?.email || "").toLowerCase()
 
-            const isGroupAdmin = rawGroups.some((g) => configuredAdminGroups.includes(g))
+            const isGroupAdmin = rawGroups.some((g) =>
+              configuredAdminGroups.some((cg) => cg.toLowerCase() === String(g).toLowerCase())
+            )
             const isEmailAdmin = adminEmails.includes(userEmail)
 
             const isAdmin = isGroupAdmin || isEmailAdmin

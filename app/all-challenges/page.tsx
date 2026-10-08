@@ -8,7 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
-import { Flame, ArrowLeft, User, Search, RefreshCw, Sparkles } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { useSession } from "@/lib/auth-client"
+import { Flame, ArrowLeft, User, Search, RefreshCw, Sparkles, Trash2, ShieldCheck } from "lucide-react"
 
 type Challenge = {
   id: number | string
@@ -23,7 +25,12 @@ export default function AllChallenges() {
   const [filter, setFilter] = useState("all")
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<number | string | null>(null)
+
   const router = useRouter()
+  const { data: session } = useSession()
+
+  const isAdmin = (session?.user as any)?.role === "admin"
 
   useEffect(() => {
     setLoading(true)
@@ -36,10 +43,45 @@ export default function AllChallenges() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleDeleteChallenge = async (id: number | string) => {
+    if (!confirm("Voulez-vous vraiment supprimer ce défi ?")) return
+
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/deleteChallenge?id=${id}`, {
+        method: "DELETE",
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        setChallenges((prev) => prev.filter((c) => c.id !== id))
+        toast({
+          title: "Supprimé !",
+          description: "Le défi a été supprimé avec succès.",
+        })
+      } else {
+        toast({
+          title: "Erreur",
+          description: data.error || "Impossible de supprimer le défi.",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression.",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const filteredChallenges = challenges.filter((challenge) => {
     const matchesFilter = filter === "all" || challenge.TYPE === filter
-    const matchesSearch = challenge.value.toLowerCase().includes(search.toLowerCase()) ||
-                          challenge.username.toLowerCase().includes(search.toLowerCase())
+    const matchesSearch =
+      challenge.value.toLowerCase().includes(search.toLowerCase()) ||
+      challenge.username.toLowerCase().includes(search.toLowerCase())
     return matchesFilter && matchesSearch
   })
 
@@ -50,7 +92,15 @@ export default function AllChallenges() {
           <div className="flex items-center space-x-3">
             <Flame className="w-7 h-7 text-amber-300 animate-pulse" />
             <div>
-              <CardTitle className="text-2xl font-bold">Tous les Défis</CardTitle>
+              <div className="flex items-center space-x-2">
+                <CardTitle className="text-2xl font-bold">Tous les Défis</CardTitle>
+                {isAdmin && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-400/20 text-amber-200 border border-amber-300/30">
+                    <ShieldCheck className="w-3 h-3 mr-1 text-amber-300" />
+                    Admin
+                  </span>
+                )}
+              </div>
               <CardDescription className="text-red-100 text-xs">
                 Explorez la liste complète des actions et vérités
               </CardDescription>
@@ -118,9 +168,23 @@ export default function AllChallenges() {
                       >
                         {c.TYPE === "action" ? "🔥 Action" : "💬 Vérité"}
                       </span>
-                      <div className="flex items-center text-xs text-gray-500 font-medium">
-                        <User className="w-3.5 h-3.5 mr-1" />
-                        {c.username}
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs text-gray-500 font-medium">
+                          <User className="w-3.5 h-3.5 mr-1" />
+                          {c.username}
+                        </div>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={deletingId === c.id}
+                            onClick={() => handleDeleteChallenge(c.id)}
+                            className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Supprimer ce défi"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     <p className="text-gray-800 font-medium text-base">{c.value}</p>

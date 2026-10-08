@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
-import { genericOAuth } from "better-auth/plugins"
+import { genericOAuth, admin } from "better-auth/plugins"
 import { prisma } from "@/lib/prisma"
 
 function cleanEnv(val?: string): string {
@@ -28,7 +28,7 @@ const defaultTrustedOrigins = [
 const trustedOrigins = Array.from(new Set([...defaultTrustedOrigins, ...configuredTrustedOrigins]))
 
 // Configure optional OIDC / Generic OAuth plugin
-const plugins = []
+const plugins: any[] = [admin()]
 
 const oidcEnabled = cleanEnv(process.env.OIDC_ENABLED) === "true"
 const oidcClientId = cleanEnv(process.env.OIDC_CLIENT_ID)
@@ -61,6 +61,29 @@ if (oidcEnabled || oidcClientId) {
           redirectURI: `${baseUrl}/api/auth/callback/${providerId}`,
           scopes,
           pkce: true,
+          mapProfileToUser: async (profile: any) => {
+            const rawGroups: string[] = Array.isArray(profile?.groups) ? profile.groups : []
+            const configuredAdminGroups = (cleanEnv(process.env.OIDC_ADMIN_GROUPS) || "truthordare admin,authentik Admins,Grafana Admins")
+              .split(",")
+              .map((g) => cleanEnv(g))
+              .filter(Boolean)
+
+            const adminEmails = (cleanEnv(process.env.ADMIN_EMAILS) || "")
+              .split(",")
+              .map((e) => cleanEnv(e).toLowerCase())
+              .filter(Boolean)
+
+            const userEmail = (profile?.email || "").toLowerCase()
+
+            const isGroupAdmin = rawGroups.some((g) => configuredAdminGroups.includes(g))
+            const isEmailAdmin = adminEmails.includes(userEmail)
+
+            const isAdmin = isGroupAdmin || isEmailAdmin
+
+            return {
+              role: isAdmin ? "admin" : "user",
+            }
+          },
         },
       ],
     })

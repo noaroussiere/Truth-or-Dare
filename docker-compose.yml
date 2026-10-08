@@ -44,6 +44,8 @@ services:
       OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET:-}"
       OIDC_DISCOVERY_URL: "${OIDC_DISCOVERY_URL:-}"
       OIDC_SCOPES: "${OIDC_SCOPES:-openid,profile,email}"
+      OIDC_ADMIN_GROUPS: "${OIDC_ADMIN_GROUPS:-truthordare admin,authentik Admins,Grafana Admins}"
+      ADMIN_EMAILS: "${ADMIN_EMAILS:-}"
       NODE_ENV: "production"
     depends_on:
       db:

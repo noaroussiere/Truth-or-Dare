@@ -62,6 +62,50 @@ if (oidcEnabled || oidcClientId) {
           scopes,
           pkce: true,
           overrideUserInfo: true,
+          getUserInfo: async (tokens: any) => {
+            let idTokenClaims: any = {}
+            if (tokens?.idToken) {
+              try {
+                const parts = tokens.idToken.split(".")
+                if (parts.length >= 2) {
+                  const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
+                  const jsonStr = Buffer.from(base64, "base64").toString("utf-8")
+                  idTokenClaims = JSON.parse(jsonStr)
+                }
+              } catch (e) {
+                console.error("Error decoding ID Token in getUserInfo:", e)
+              }
+            }
+
+            let userInfo: any = {}
+            if (userInfoUrl && tokens?.accessToken) {
+              try {
+                const res = await fetch(userInfoUrl, {
+                  headers: {
+                    Authorization: `Bearer ${tokens.accessToken}`,
+                  },
+                })
+                if (res.ok) {
+                  userInfo = await res.json()
+                }
+              } catch (e) {
+                console.error("Error fetching userInfoUrl:", e)
+              }
+            }
+
+            const rawGroups =
+              idTokenClaims.groups ||
+              userInfo.groups ||
+              idTokenClaims["http://schemas.xmlsoap.org/claims/Group"] ||
+              userInfo["http://schemas.xmlsoap.org/claims/Group"] ||
+              []
+
+            return {
+              ...userInfo,
+              ...idTokenClaims,
+              groups: Array.isArray(rawGroups) ? rawGroups : typeof rawGroups === "string" ? [rawGroups] : [],
+            }
+          },
           mapProfileToUser: async (profile: any) => {
             const rawGroups: string[] = Array.isArray(profile?.groups)
               ? profile.groups

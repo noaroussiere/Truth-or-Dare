@@ -141,14 +141,27 @@ if (oidcEnabled || oidcClientId) {
             const isEmailAdmin = adminEmails.includes(userEmail)
 
             const isAdmin = isGroupAdmin || isEmailAdmin
+            const targetRole = isAdmin ? "admin" : "user"
 
             console.log("[OIDC SSO LOG] Email:", userEmail)
             console.log("[OIDC SSO LOG] Configured Admin Groups:", configuredAdminGroups)
             console.log("[OIDC SSO LOG] Is Group Admin?:", isGroupAdmin)
-            console.log("[OIDC SSO LOG] Assigned Role:", isAdmin ? "admin" : "user")
+            console.log("[OIDC SSO LOG] Assigned Role:", targetRole)
+
+            // Direct Prisma update to ensure existing database users update role immediately
+            if (userEmail) {
+              try {
+                await prisma.user.updateMany({
+                  where: { email: userEmail },
+                  data: { role: targetRole },
+                })
+              } catch (err) {
+                console.error("[OIDC SSO LOG] Direct Prisma role update error:", err)
+              }
+            }
 
             return {
-              role: isAdmin ? "admin" : "user",
+              role: targetRole,
             }
           },
         },
@@ -167,7 +180,6 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         defaultValue: "user",
-        input: false,
       },
     },
   },

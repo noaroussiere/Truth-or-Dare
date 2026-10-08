@@ -161,6 +161,16 @@ export const auth = betterAuth({
   secret: cleanEnv(process.env.BETTER_AUTH_SECRET) || "super-secret-key-change-in-production-1234567890",
   baseURL: baseUrl,
   trustedOrigins,
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "user",
+        input: false,
+      },
+    },
+  },
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),

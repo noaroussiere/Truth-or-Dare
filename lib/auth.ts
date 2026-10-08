@@ -73,7 +73,7 @@ if (oidcEnabled || oidcClientId) {
                   idTokenClaims = JSON.parse(jsonStr)
                 }
               } catch (e) {
-                console.error("Error decoding ID Token in getUserInfo:", e)
+                console.error("[OIDC SSO LOG] Error decoding ID Token in getUserInfo:", e)
               }
             }
 
@@ -89,7 +89,7 @@ if (oidcEnabled || oidcClientId) {
                   userInfo = await res.json()
                 }
               } catch (e) {
-                console.error("Error fetching userInfoUrl:", e)
+                console.error("[OIDC SSO LOG] Error fetching userInfoUrl:", e)
               }
             }
 
@@ -100,10 +100,17 @@ if (oidcEnabled || oidcClientId) {
               userInfo["http://schemas.xmlsoap.org/claims/Group"] ||
               []
 
+            const extractedGroups = Array.isArray(rawGroups) ? rawGroups : typeof rawGroups === "string" ? [rawGroups] : []
+
+            console.log("[OIDC SSO LOG] --- Incoming SSO Login ---")
+            console.log("[OIDC SSO LOG] ID Token Claims:", idTokenClaims)
+            console.log("[OIDC SSO LOG] UserInfo Response:", userInfo)
+            console.log("[OIDC SSO LOG] Extracted Groups:", extractedGroups)
+
             return {
               ...userInfo,
               ...idTokenClaims,
-              groups: Array.isArray(rawGroups) ? rawGroups : typeof rawGroups === "string" ? [rawGroups] : [],
+              groups: extractedGroups,
             }
           },
           mapProfileToUser: async (profile: any) => {
@@ -134,6 +141,11 @@ if (oidcEnabled || oidcClientId) {
             const isEmailAdmin = adminEmails.includes(userEmail)
 
             const isAdmin = isGroupAdmin || isEmailAdmin
+
+            console.log("[OIDC SSO LOG] Email:", userEmail)
+            console.log("[OIDC SSO LOG] Configured Admin Groups:", configuredAdminGroups)
+            console.log("[OIDC SSO LOG] Is Group Admin?:", isGroupAdmin)
+            console.log("[OIDC SSO LOG] Assigned Role:", isAdmin ? "admin" : "user")
 
             return {
               role: isAdmin ? "admin" : "user",

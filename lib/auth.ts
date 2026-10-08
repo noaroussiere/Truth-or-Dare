@@ -61,6 +61,7 @@ if (oidcEnabled || oidcClientId) {
           redirectURI: `${baseUrl}/api/auth/callback/${providerId}`,
           scopes,
           pkce: true,
+          overrideUserInfo: true,
           mapProfileToUser: async (profile: any) => {
             const rawGroups: string[] = Array.isArray(profile?.groups) ? profile.groups : []
             const configuredAdminGroups = (cleanEnv(process.env.OIDC_ADMIN_GROUPS) || "truthordare admin,authentik Admins,Grafana Admins")
@@ -99,6 +100,27 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const adminEmails = (cleanEnv(process.env.ADMIN_EMAILS) || "")
+            .split(",")
+            .map((e) => cleanEnv(e).toLowerCase())
+            .filter(Boolean)
+
+          if (adminEmails.includes((user.email || "").toLowerCase())) {
+            return {
+              data: {
+                ...user,
+                role: "admin",
+              },
+            }
+          }
+        },
+      },
+    },
   },
   plugins,
 })

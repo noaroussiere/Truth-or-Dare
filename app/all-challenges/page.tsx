@@ -33,14 +33,6 @@ export default function AllChallenges() {
   const isAdmin = (session?.user as any)?.role === "admin"
 
   useEffect(() => {
-    if (session?.user) {
-      console.log("[TruthOrDare Client Log] Session User:", session.user)
-      console.log("[TruthOrDare Client Log] User Role:", (session.user as any)?.role)
-      console.log("[TruthOrDare Client Log] Is Admin?:", isAdmin)
-    }
-  }, [session, isAdmin])
-
-  useEffect(() => {
     setLoading(true)
     fetch("/api/getAllChallenge")
       .then((response) => response.json())
